@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAT Compliant Invoice Generator - Saudi Arabia</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* A4 Container */
+        .a4-container {
+            background: white;
+            width: 21cm;
+            min-height: 29.7cm;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            margin-bottom: 20px;
+        }
+
+        /* Watermark for copy */
+        .copy-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            user-select: none;
+            z-index: 1;
+            white-space: nowrap;
+        }
+
+        /* Watermark for original */
+        .original-watermark {
+            color: rgba(255, 0, 0, 0.08);
+        }
+
+        /* Main Content */
+        .invoice-content {
+            position: relative;
+            z-index: 2;
+            padding: 2cm;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .logo-container {
+            width: 200px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+
+        .logo-preview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .invoice-title h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .invoice-title h2 {
+            font-size: 24px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        /* Invoice Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .detail-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .detail-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #007bff;
+            font-size: 18px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group.required label::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+        }
+
+        /* Items Table */
+        .items-section {
+            margin-bottom: 40px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .items-table th {
+            background: #343a40;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .items-table td {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .items-table input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+        }
+
+        .add-item-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .add-item-btn:hover {
+            background: #218838;
+        }
+
+        /* VAT Summary */
+        .vat-summary {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #ced4da;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ced4da;
+        }
+
+        .summary-item.total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+            border-bottom: 2px solid #333;
+        }
+
+        .summary-item.vat-total {
+            color: #dc3545;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn.primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .action-btn.success {
+            background: #28a745;
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        /* Utility Classes */
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .currency {
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .a4-container {
+                box-shadow: none;
+                margin: 0;
+            }
+            
+            .action-buttons {
+                display: none;
+            }
+            
+            /* Show both copies when printing */
+            .copy-2 {
+                display: block !important;
+                margin-top: 2cm;
+            }
+            
+            .copy-watermark {
+                opacity: 0.2;
+            }
+        }
+
+        /* Copy Control */
+        .copy-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .copy-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Copy 2 Styling */
+        .copy-2 {
+            display: none;
+        }
+
+        .copy-2 .copy-watermark {
+            color: rgba(0, 0, 255, 0.08);
+        }
+    </style>
+</head>
+<body>
+    <!-- Copy Control -->
+    <div class="copy-control">
+        <label class="copy-checkbox">
+            <input type="checkbox" id="showCopy2" onchange="toggleCopy()">
+            Show Second Copy
+        </label>
+    </div>
+
+    <!-- ORIGINAL COPY -->
+    <div class="a4-container" id="originalCopy">
+        <div class="copy-watermark original-watermark">ORIGINAL</div>
+        <div class="invoice-content">
+            <div class="header">
+                <div class="company-info">
+                    <div class="logo-container" id="logoContainer">
+                        <img id="logoPreview" class="logo-preview" alt="Company Logo">
+                        <div id="logoPlaceholder">Company Logo</div>
+                    </div>
+                    <input type="file" id="logoUpload" accept="image/*" onchange="uploadLogo()" hidden>
+                    <button class="upload-btn" onclick="document.getElementById('logoUpload').click()">
+                        Upload Logo
+                    </button>
+                    
+                    <div class="form-group required">
+                        <label>Business Name</label>
+                        <input type="text" class="form-control" id="businessName" placeholder="Enter business name">
+                    </div>
+                    <div class="form-group required">
+                        <label>Business Address</label>
+                        <textarea class="form-control" id="businessAddress" rows="3" placeholder="Enter full address"></textarea>
+                    </div>
+                    <div class="form-group required">
+                        <label>VAT Registration Number (15 digits)</label>
+                        <input type="text" class="form-control" id="vatNumber" pattern="\d{15}" placeholder="Enter 15-digit VAT number">
+                    </div>
+                </div>
+                
+                <div class="invoice-title">
+                    <h1 id="companyNameDisplay">Company Name</h1>
+                    <h2>TAX INVOICE</h2>
+                    
+                    <div style="margin-top: 30px;">
+                        <div class="form-group required">
+                            <label>Invoice Number</label>
+                            <input type="text" class="form-control" id="invoiceNumber" placeholder="INV-2024-001">
+                        </div>
+                        <div class="form-group required">
+                            <label>Invoice Date</label>
+                            <input type="date" class="form-control" id="invoiceDate" value="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Supply Date (if different)</label>
+                            <input type="date" class="form-control" id="supplyDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer and Invoice Details -->
+            <div class="details-grid">
+                <div class="detail-section">
+                    <h3>CUSTOMER DETAILS</h3>
+                    <div class="form-group required">
+                        <label>Customer Name</label>
+                        <input type="text" class="form-control" id="customerName" placeholder="Enter customer name">
+                    </div>
+                    <div class="form-group required">
+                        <label>Customer Address</label>
+                        <textarea class="form-control" id="customerAddress" rows="3" placeholder="Enter customer address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer VAT Number (if registered)</label>
+                        <input type="text" class="form-control" id="customerVat" placeholder="Enter customer VAT number">
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>INVOICE SUMMARY</h3>
+                    <div class="summary-item">
+                        <span>Invoice Total (excl. VAT):</span>
+                        <span class="currency" id="subtotalDisplay">0.00 SAR</span>
+                    </div>
+                    <div class="summary-item vat-total">
+                        <span>VAT Amount (15%):</span>
+                        <span class="currency" id="vatAmountDisplay">0.00 SAR</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>TOTAL AMOUNT DUE:</span>
+                        <span class="currency" id="totalDisplay">0.00 SAR</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Currency:</span>
+                        <span>Saudi Riyal (SAR)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="items-section">
+                <h3>GOODS OR SERVICES</h3>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th width="40%">Description</th>
+                            <th width="15%">Quantity</th>
+                            <th width="15%">Unit</th>
+                            <th width="15%">Unit Price (SAR)</th>
+                            <th width="15%">Subtotal (SAR)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <tr>
+                            <td><input type="text" class="item-description" placeholder="Description of goods/services"></td>
+                            <td><input type="number" class="item-quantity" min="0" step="0.01" value="1" onchange="calculateRow(this)"></td>
+                            <td><input type="text" class="item-unit" placeholder="Unit" value="Piece"></td>
+                            <td><input type="number" class="item-price" min="0" step="0.01" value="0" onchange="calculateRow(this)"></td>
+                            <td><span class="item-subtotal currency">0.00</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="add-item-btn" onclick="addItem()">+ Add Item</button>
+            </div>
+
+            <!-- VAT Details -->
+            <div class="vat-summary">
+                <h3>VAT DETAILS</h3>
+                <div class="summary-grid">
+                    <div>
+                        <div class="summary-item">
+                            <span>Subtotal (excl. VAT):</span>
+                            <span class="currency" id="subtotalExclVat">0.00 SAR</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>VAT Rate:</span>
+                            <span>15%</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>VAT Amount:</span>
+                            <span class="currency" id="vatAmount">0.00 SAR</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="summary-item total">
+                            <span>Total (incl. VAT):</span>
+                            <span class="currency" id="totalInclVat">0.00 SAR</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Amount in Words:</span>
+                            <span id="amountWords">Zero Riyals</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p>This is a computer-generated invoice and does not require a signature.</p>
+                <p>VAT Registration Number: <span id="footerVatNumber">[VAT Number]</span> | Invoice Number: <span id="footerInvoiceNumber">[Invoice Number]</span></p>
+                <p>All amounts in Saudi Riyals (SAR) | VAT compliant according to Saudi Arabian Tax Authority (ZATCA)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DUPLICATE COPY -->
+    <div class="a4-container copy-2" id="duplicateCopy">
+        <div class="copy-watermark">DUPLICATE</div>
+        <div class="invoice-content">
+            <!-- Duplicate content will be mirrored here -->
+            <div class="header">
+                <div class="company-info">
+                    <div class="logo-container">
+                        <img id="logoPreviewCopy" class="logo-preview" alt="Company Logo">
+                    </div>
+                    <div class="form-group">
+                        <label>Business Name</label>
+                        <div id="businessNameCopy" class="form-control" style="background: #e9ecef;">[Business Name]</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Business Address</label>
+                        <div id="businessAddressCopy" class="form-control" style="background: #e9ecef; height: auto;">[Business Address]</div>
+                    </div>
+                    <div class="form-group">
+                        <label>VAT Registration Number</label>
+                        <div id="vatNumberCopy" class="form-control" style="background: #e9ecef;">[VAT Number]</div>
+                    </div>
+                </div>
+                
+                <div class="invoice-title">
+                    <h1 id="companyNameCopy">[Company Name]</h1>
+                    <h2>TAX INVOICE</h2>
+                    
+                    <div style="margin-top: 30px;">
+                        <div class="form-group">
+                            <label>Invoice Number</label>
+                            <div id="invoiceNumberCopy" class="form-control" style="background: #e9ecef;">[Invoice Number]</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Invoice Date</label>
+                            <div id="invoiceDateCopy" class="form-control" style="background: #e9ecef;">[Invoice Date]</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Supply Date</label>
+                            <div id="supplyDateCopy" class="form-control" style="background: #e9ecef;">[Supply Date]</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rest of duplicate copy content (similar structure) -->
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="action-btn primary" onclick="updateDuplicate()">Update Duplicate</button>
+        <button class="action-btn success" onclick="generatePDF()">Print/Generate PDF</button>
+        <button class="action-btn secondary" onclick="clearForm()">Clear Form</button>
+    </div>
+
+    <script>
+        // Logo Upload Function
+        function uploadLogo() {
+            const fileInput = document.getElementById('logoUpload');
+            const logoPreview = document.getElementById('logoPreview');
+            const logoPreviewCopy = document.getElementById('logoPreviewCopy');
+            const logoPlaceholder = document.getElementById('logoPlaceholder');
+            const logoContainer = document.getElementById('logoContainer');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    logoPreview.src = e.target.result;
+                    logoPreview.style.display = 'block';
+                    logoPreviewCopy.src = e.target.result;
+                    logoPreviewCopy.style.display = 'block';
+                    logoPlaceholder.style.display = 'none';
+                    logoContainer.style.border = 'none';
+                }
+                
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // Add Item Row
+        function addItem() {
+            const tbody = document.getElementById('itemsTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="item-description" placeholder="Description of goods/services"></td>
+                <td><input type="number" class="item-quantity" min="0" step="0.01" value="1" onchange="calculateRow(this)"></td>
+                <td><input type="text" class="item-unit" placeholder="Unit" value="Piece"></td>
+                <td><input type="number" class="item-price" min="0" step="0.01" value="0" onchange="calculateRow(this)"></td>
+                <td><span class="item-subtotal currency">0.00</span></td>
+            `;
+            tbody.appendChild(newRow);
+            calculateTotals();
+        }
+
+        // Calculate Row Subtotal
+        function calculateRow(input) {
+            const row = input.closest('tr');
+            const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            const subtotal = quantity * price;
+            
+            row.querySelector('.item-subtotal').textContent = subtotal.toFixed(2);
+            calculateTotals();
+        }
+
+        // Calculate All Totals
+        function calculateTotals() {
+            let subtotal = 0;
+            const rows = document.querySelectorAll('#itemsTableBody tr');
+            
+            rows.forEach(row => {
+                const subtotalElem = row.querySelector('.item-subtotal');
+                subtotal += parseFloat(subtotalElem.textContent) || 0;
+            });
+            
+            const vatRate = 0.15;
+            const vatAmount = subtotal * vatRate;
+            const total = subtotal + vatAmount;
+            
+            // Update displays
+            document.getElementById('subtotalExclVat').textContent = subtotal.toFixed(2) + ' SAR';
+            document.getElementById('vatAmount').textContent = vatAmount.toFixed(2) + ' SAR';
+            document.getElementById('totalInclVat').textContent = total.toFixed(2) + ' SAR';
+            document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2) + ' SAR';
+            document.getElementById('vatAmountDisplay').textContent = vatAmount.toFixed(2) + ' SAR';
+            document.getElementById('totalDisplay').textContent = total.toFixed(2) + ' SAR';
+            
+            // Update amount in words
+            document.getElementById('amountWords').textContent = numberToWords(total);
+            
+            // Update company name display
+            const businessName = document.getElementById('businessName').value;
+            if (businessName) {
+                document.getElementById('companyNameDisplay').textContent = businessName;
+            }
+        }
+
+        // Number to Words Conversion (simplified)
+        function numberToWords(num) {
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            
+            if (num === 0) return 'Zero Riyals';
+            
+            let words = '';
+            const riyals = Math.floor(num);
+            const halalas = Math.round((num - riyals) * 100);
+            
+            if (riyals > 0) {
+                if (riyals >= 1000000) {
+                    words += numberToWords(Math.floor(riyals / 1000000)) + ' Million ';
+                    riyals %= 1000000;
+                }
+                if (riyals >= 1000) {
+                    words += numberToWords(Math.floor(riyals / 1000)) + ' Thousand ';
+                    riyals %= 1000;
+                }
+                if (riyals >= 100) {
+                    words += ones[Math.floor(riyals / 100)] + ' Hundred ';
+                    riyals %= 100;
+                }
+                if (riyals >= 20) {
+                    words += tens[Math.floor(riyals / 10)] + ' ';
+                    riyals %= 10;
+                }
+                if (riyals >= 10) {
+                    words += teens[riyals - 10] + ' ';
+                    riyals = 0;
+                }
+                if (riyals > 0) {
+                    words += ones[riyals] + ' ';
+                }
+                words += 'Riyals';
+            }
+            
+            if (halalas > 0) {
+                if (words) words += ' and ';
+                if (halalas < 10) words += ones[halalas] + ' Halala';
+                else if (halalas < 20) words += teens[halalas - 10] + ' Halalas';
+                else words += tens[Math.floor(halalas / 10)] + ' ' + ones[halalas % 10] + ' Halalas';
+            }
+            
+            return words.trim();
+        }
+
+        // Update Duplicate Copy
+        function updateDuplicate() {
+            // Copy all values from original to duplicate
+            const copyElements = {
+                'businessName': 'businessNameCopy',
+                'businessAddress': 'businessAddressCopy',
+                'vatNumber': 'vatNumberCopy',
+                'companyNameDisplay': 'companyNameCopy',
+                'invoiceNumber': 'invoiceNumberCopy',
+                'invoiceDate': 'invoiceDateCopy',
+                'supplyDate': 'supplyDateCopy',
+                'customerName': 'customerNameCopy',
+                'customerAddress': 'customerAddressCopy',
+                'customerVat': 'customerVatCopy'
+            };
+            
+            for (const [sourceId, targetId] of Object.entries(copyElements)) {
+                const source = document.getElementById(sourceId);
+                const target = document.getElementById(targetId);
+                if (source && target) {
+                    if (source.type === 'date') {
+                        target.textContent = source.value ? new Date(source.value).toLocaleDateString() : '';
+                    } else {
+                        target.textContent = source.value || '';
+                    }
+                }
+            }
+            
+            // Update footer info
+            document.getElementById('footerVatNumber').textContent = 
+                document.getElementById('vatNumber').value || '[VAT Number]';
+            document.getElementById('footerInvoiceNumber').textContent = 
+                document.getElementById('invoiceNumber').value || '[Invoice Number]';
+        }
+
+        // Toggle Second Copy
+        function toggleCopy() {
+            const showCopy2 = document.getElementById('showCopy2').checked;
+            const duplicateCopy = document.getElementById('duplicateCopy');
+            duplicateCopy.style.display = showCopy2 ? 'block' : 'none';
+            updateDuplicate();
+        }
+
+        // Generate PDF/Print
+        function generatePDF() {
+            // Update duplicate before printing
+            updateDuplicate();
+            
+            // Show both copies for printing
+            document.getElementById('showCopy2').checked = true;
+            toggleCopy();
+            
+            // Wait a moment then print
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        // Clear Form
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all form data?')) {
+                document.querySelectorAll('input, textarea').forEach(input => {
+                    if (input.type !== 'file') {
+                        input.value = '';
+                    }
+                });
+                
+                // Reset items table
+                const tbody = document.getElementById('itemsTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td><input type="text" class="item-description" placeholder="Description of goods/services"></td>
+                        <td><input type="number" class="item-quantity" min="0" step="0.01" value="1" onchange="calculateRow(this)"></td>
+                        <td><input type="text" class="item-unit" placeholder="Unit" value="Piece"></td>
+                        <td><input type="number" class="item-price" min="0" step="0.01" value="0" onchange="calculateRow(this)"></td>
+                        <td><span class="item-subtotal currency">0.00</span></td>
+                    </tr>
+                `;
+                
+                // Reset logo
+                const logoPreview = document.getElementById('logoPreview');
+                const logoPreviewCopy = document.getElementById('logoPreviewCopy');
+                const logoPlaceholder = document.getElementById('logoPlaceholder');
+                const logoContainer = document.getElementById('logoContainer');
+                
+                logoPreview.src = '';
+                logoPreview.style.display = 'none';
+                logoPreviewCopy.src = '';
+                logoPreviewCopy.style.display = 'none';
+                logoPlaceholder.style.display = 'block';
+                logoContainer.style.border = '2px dashed #ccc';
+                
+                // Reset calculations
+                calculateTotals();
+                updateDuplicate();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default invoice number
+            const today = new Date();
+            const invoiceNumber = `INV-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-001`;
+            document.getElementById('invoiceNumber').value = invoiceNumber;
+            
+            // Calculate initial totals
+            calculateTotals();
+            updateDuplicate();
+            
+            // Add real-time updates
+            document.querySelectorAll('input, textarea').forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input.id === 'businessName') {
+                        document.getElementById('companyNameDisplay').textContent = input.value || 'Company Name';
+                    }
+                    calculateTotals();
+                });
+            });
+        });
+
+        // Auto-save to localStorage
+        function saveToLocalStorage() {
+            const formData = {};
+            document.querySelectorAll('input, textarea').forEach(input => {
+                if (input.type !== 'file') {
+                    formData[input.id] = input.value;
+                }
+            });
+            localStorage.setItem('invoiceFormData', JSON.stringify(formData));
+        }
+
+        // Load from localStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('invoiceFormData');
+            if (savedData) {
+                const formData = JSON.parse(savedData);
+                Object.keys(formData).forEach(key => {
+                    const input = document.getElementById(key);
+                    if (input) {
+                        input.value = formData[key];
+                    }
+                });
+                calculateTotals();
+            }
+        }
+
+        // Auto-save every 5 seconds
+        setInterval(saveToLocalStorage, 5000);
+        
+        // Load saved data on page load
+        window.addEventListener('load', loadFromLocalStorage);
+    </script>
+</body>
+</html>
