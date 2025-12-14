@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VAT Compliant Invoice Generator - Saudi Arabia</title>
+    <title>VAT Invoice Generator - Saudi Arabia</title>
     <style>
         /* Reset and Base Styles */
         * {
@@ -17,12 +17,12 @@
             background: #f5f7fa;
             color: #333;
             line-height: 1.6;
+            padding: 20px;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
 
         /* Form Section */
@@ -96,7 +96,7 @@
         }
 
         .logo-preview-container {
-            width: 150px;
+            width: 200px;
             height: 100px;
             border: 2px dashed #ddd;
             border-radius: 5px;
@@ -117,7 +117,7 @@
             background: #3498db;
             color: white;
             border: none;
-            padding: 8px 20px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
@@ -259,36 +259,15 @@
         }
 
         /* Printable Invoice Styles */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            
-            .printable-invoice, .printable-invoice * {
-                visibility: visible;
-            }
-            
-            .printable-invoice {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            
-            .no-print {
-                display: none !important;
-            }
-        }
-
-        /* Printable Invoice Container */
         .printable-invoice {
-            display: none;
             background: white;
             width: 21cm;
             min-height: 29.7cm;
-            margin: 0 auto;
+            margin: 20px auto;
             padding: 2cm;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             position: relative;
+            display: none; /* Hidden by default */
         }
 
         .invoice-watermark {
@@ -481,7 +460,7 @@
 
         /* Copy Toggle */
         .copy-toggle {
-            display: flex;
+            display: none; /* Hidden by default */
             gap: 20px;
             justify-content: center;
             margin: 20px 0;
@@ -512,8 +491,37 @@
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .printable-invoice, .printable-invoice * {
+                visibility: visible;
+            }
+            
+            .printable-invoice {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 2cm;
+                box-shadow: none;
+                display: block !important;
+                page-break-after: always;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .action-buttons, .form-section, .copy-toggle {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -526,13 +534,13 @@
             <!-- Logo Upload -->
             <div class="logo-upload-section">
                 <div class="logo-preview-container">
-                    <img id="logoPreview" class="logo-preview" style="display: none;">
-                    <div id="logoPlaceholder">Upload Company Logo</div>
+                    <img id="logoPreview" class="logo-preview" style="display: none;" alt="Logo Preview">
+                    <div id="logoPlaceholder">No Logo Uploaded</div>
                 </div>
                 <div>
                     <input type="file" id="logoUpload" accept="image/*" hidden>
-                    <button class="upload-btn" onclick="document.getElementById('logoUpload').click()">
-                        Choose Logo File
+                    <button type="button" class="upload-btn" onclick="document.getElementById('logoUpload').click()">
+                        Upload Logo
                     </button>
                     <p style="margin-top: 5px; font-size: 12px; color: #7f8c8d;">Recommended: 300x100px PNG or JPG</p>
                 </div>
@@ -547,7 +555,7 @@
                 </div>
                 <div class="form-group required">
                     <label>VAT Registration Number (15 digits)</label>
-                    <input type="text" id="vatNumber" class="form-control" pattern="\d{15}" placeholder="123456789012345">
+                    <input type="text" id="vatNumber" class="form-control" pattern="\d{15}" placeholder="123456789012345" maxlength="15">
                 </div>
                 <div class="form-group required" style="grid-column: span 2;">
                     <label>Business Address</label>
@@ -564,7 +572,7 @@
                 </div>
                 <div class="form-group required">
                     <label>Invoice Date</label>
-                    <input type="date" id="invoiceDate" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                    <input type="date" id="invoiceDate" class="form-control">
                 </div>
                 <div class="form-group">
                     <label>Supply Date (if different)</label>
@@ -605,15 +613,15 @@
                 <tbody id="itemsTableBody">
                     <tr>
                         <td>1</td>
-                        <td><input type="text" class="item-description form-control" placeholder="Description"></td>
-                        <td><input type="number" class="item-quantity form-control" min="0" step="0.01" value="1"></td>
-                        <td><input type="text" class="item-unit form-control" value="Piece"></td>
-                        <td><input type="number" class="item-price form-control" min="0" step="0.01" value="0"></td>
-                        <td><button class="delete-item-btn" onclick="deleteItem(this)" disabled>Delete</button></td>
+                        <td><input type="text" class="item-description form-control" placeholder="Description" oninput="calculateTotals()"></td>
+                        <td><input type="number" class="item-quantity form-control" min="0" step="0.01" value="1" oninput="calculateTotals()"></td>
+                        <td><input type="text" class="item-unit form-control" value="Piece" oninput="calculateTotals()"></td>
+                        <td><input type="number" class="item-price form-control" min="0" step="0.01" value="0" oninput="calculateTotals()"></td>
+                        <td><button type="button" class="delete-item-btn" onclick="deleteItem(this)" disabled>Delete</button></td>
                     </tr>
                 </tbody>
             </table>
-            <button class="add-item-btn" onclick="addItem()">+ Add Item</button>
+            <button type="button" class="add-item-btn" onclick="addItem()">+ Add Item</button>
 
             <!-- Summary -->
             <div class="summary-section">
@@ -638,175 +646,80 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="previewInvoice()">Preview Invoice</button>
-                <button class="btn btn-success" onclick="printInvoice()">Print Invoice</button>
-                <button class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+                <button type="button" class="btn btn-primary" onclick="generateInvoice()">Generate Invoice</button>
+                <button type="button" class="btn btn-success" onclick="printInvoices()" id="printBtn" style="display:none;">Print Invoice</button>
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
             </div>
         </div>
 
-        <!-- Printable Invoice (Hidden by default) -->
-        <div class="copy-toggle no-print" id="copyToggle" style="display: none;">
+        <!-- Copy Toggle -->
+        <div class="copy-toggle" id="copyToggle">
             <button class="copy-btn active" onclick="showCopy('original')">ORIGINAL</button>
             <button class="copy-btn" onclick="showCopy('duplicate')">DUPLICATE</button>
         </div>
 
-        <!-- Original Copy -->
-        <div id="printableOriginal" class="printable-invoice">
-            <div class="invoice-watermark">ORIGINAL</div>
-            <div class="invoice-content">
-                <!-- Header -->
-                <div class="invoice-header">
-                    <div class="company-header">
-                        <img id="printLogo" class="company-logo" style="display: none;">
-                        <div class="company-name" id="printBusinessName">[Business Name]</div>
-                        <div id="printBusinessAddress" style="color: #7f8c8d; margin-bottom: 10px;"></div>
-                        <div><strong>VAT Registration:</strong> <span id="printVatNumber">[VAT Number]</span></div>
-                    </div>
-                    <div class="invoice-title">
-                        <h1 id="printCompanyName">[Company Name]</h1>
-                        <h2>TAX INVOICE</h2>
-                        <div class="invoice-info">
-                            <div class="info-row">
-                                <span class="info-label">Invoice No:</span>
-                                <span id="printInvoiceNumber">[Invoice Number]</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Invoice Date:</span>
-                                <span id="printInvoiceDate">[Date]</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Supply Date:</span>
-                                <span id="printSupplyDate">[Supply Date]</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customer Details -->
-                <div class="invoice-details">
-                    <div class="detail-box">
-                        <h3>BILL TO</h3>
-                        <div><strong id="printCustomerName">[Customer Name]</strong></div>
-                        <div id="printCustomerAddress" style="margin: 10px 0;"></div>
-                        <div><strong>Customer VAT:</strong> <span id="printCustomerVat">[If registered]</span></div>
-                    </div>
-                    <div class="detail-box">
-                        <h3>PAYMENT SUMMARY</h3>
-                        <div class="summary-row">
-                            <span>Subtotal:</span>
-                            <span class="currency" id="printSubtotal">0.00 SAR</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>VAT (15%):</span>
-                            <span class="currency" id="printVatAmount">0.00 SAR</span>
-                        </div>
-                        <div class="summary-row total">
-                            <span>Total Due:</span>
-                            <span class="currency" id="printTotal">0.00 SAR</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Currency:</span>
-                            <span>Saudi Riyal (SAR)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Items Table -->
-                <h3 style="margin: 30px 0 15px 0; color: #2c3e50;">INVOICE ITEMS</h3>
-                <table class="print-items-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Unit</th>
-                            <th class="text-right">Unit Price (SAR)</th>
-                            <th class="text-right">Amount (SAR)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="printItemsBody">
-                        <!-- Items will be populated here -->
-                    </tbody>
-                </table>
-
-                <!-- VAT Summary -->
-                <div class="vat-summary">
-                    <h3 style="margin-bottom: 20px;">VAT DETAILS</h3>
-                    <div class="vat-grid">
-                        <div>
-                            <div class="vat-row">
-                                <span>Total (excl. VAT):</span>
-                                <span class="currency" id="vatSubtotal">0.00 SAR</span>
-                            </div>
-                            <div class="vat-row">
-                                <span>VAT Rate:</span>
-                                <span>15%</span>
-                            </div>
-                            <div class="vat-row">
-                                <span>VAT Amount:</span>
-                                <span class="currency" id="vatAmountPrint">0.00 SAR</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="vat-row total">
-                                <span>Total (incl. VAT):</span>
-                                <span class="currency" id="vatTotal">0.00 SAR</span>
-                            </div>
-                            <div class="amount-words" id="amountWordsPrint">
-                                Amount in words: Zero Riyals
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="invoice-footer">
-                    <div class="stamp-area">
-                        <div class="stamp-box">ORIGINAL COPY</div>
-                    </div>
-                    <p><strong>This is a computer-generated invoice and does not require a signature.</strong></p>
-                    <p>VAT Registration Number: <span id="footerVat">[VAT Number]</span> | Invoice Number: <span id="footerInvoice">[Invoice Number]</span></p>
-                    <p>All amounts in Saudi Riyals (SAR) | VAT compliant according to Saudi Arabian Tax Authority (ZATCA)</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Duplicate Copy -->
-        <div id="printableDuplicate" class="printable-invoice" style="display: none;">
-            <div class="invoice-watermark" style="color: rgba(0, 0, 255, 0.05);">DUPLICATE</div>
-            <div class="invoice-content">
-                <!-- Same structure as original, will be populated -->
-            </div>
-        </div>
+        <!-- Printable Invoices will be inserted here -->
+        <div id="invoicesContainer"></div>
     </div>
 
     <script>
         // Global variables
-        let invoiceData = {
-            logo: null,
-            items: [{
-                description: '',
-                quantity: 1,
-                unit: 'Piece',
-                price: 0,
-                subtotal: 0
-            }]
-        };
+        let currentLogo = '';
+        let invoiceData = {};
 
-        // Logo upload
-        document.getElementById('logoUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('logoPreview').src = e.target.result;
-                    document.getElementById('logoPreview').style.display = 'block';
-                    document.getElementById('logoPlaceholder').style.display = 'none';
-                    invoiceData.logo = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+        // Initialize date fields
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default for invoice date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('invoiceDate').value = today;
+            
+            // Generate initial invoice number
+            generateInvoiceNumber();
+            
+            // Initialize logo upload
+            initLogoUpload();
+            
+            // Calculate initial totals
+            calculateTotals();
         });
+
+        // Initialize logo upload
+        function initLogoUpload() {
+            const logoUpload = document.getElementById('logoUpload');
+            const logoPreview = document.getElementById('logoPreview');
+            const logoPlaceholder = document.getElementById('logoPlaceholder');
+            
+            logoUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Check file type
+                    if (!file.type.match('image.*')) {
+                        alert('Please select an image file (JPG, PNG, etc.)');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        currentLogo = e.target.result;
+                        logoPreview.src = currentLogo;
+                        logoPreview.style.display = 'block';
+                        logoPlaceholder.style.display = 'none';
+                        console.log('Logo uploaded successfully');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Generate invoice number
+        function generateInvoiceNumber() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const invoiceNumber = `INV-${year}${month}${day}-001`;
+            document.getElementById('invoiceNumber').value = invoiceNumber;
+        }
 
         // Add item row
         function addItem() {
@@ -815,11 +728,11 @@
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
                 <td>${rowCount}</td>
-                <td><input type="text" class="item-description form-control" placeholder="Description"></td>
-                <td><input type="number" class="item-quantity form-control" min="0" step="0.01" value="1"></td>
-                <td><input type="text" class="item-unit form-control" value="Piece"></td>
-                <td><input type="number" class="item-price form-control" min="0" step="0.01" value="0"></td>
-                <td><button class="delete-item-btn" onclick="deleteItem(this)">Delete</button></td>
+                <td><input type="text" class="item-description form-control" placeholder="Description" oninput="calculateTotals()"></td>
+                <td><input type="number" class="item-quantity form-control" min="0" step="0.01" value="1" oninput="calculateTotals()"></td>
+                <td><input type="text" class="item-unit form-control" value="Piece" oninput="calculateTotals()"></td>
+                <td><input type="number" class="item-price form-control" min="0" step="0.01" value="0" oninput="calculateTotals()"></td>
+                <td><button type="button" class="delete-item-btn" onclick="deleteItem(this)">Delete</button></td>
             `;
             tbody.appendChild(newRow);
             
@@ -855,22 +768,10 @@
             let subtotal = 0;
             const rows = document.querySelectorAll('#itemsTableBody tr');
             
-            invoiceData.items = [];
             rows.forEach(row => {
-                const description = row.querySelector('.item-description').value;
                 const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-                const unit = row.querySelector('.item-unit').value;
                 const price = parseFloat(row.querySelector('.item-price').value) || 0;
                 const rowSubtotal = quantity * price;
-                
-                invoiceData.items.push({
-                    description,
-                    quantity,
-                    unit,
-                    price,
-                    subtotal: rowSubtotal
-                });
-                
                 subtotal += rowSubtotal;
             });
             
@@ -934,118 +835,243 @@
             return words;
         }
 
-        // Preview invoice
-        function previewInvoice() {
-            // Validate required fields
-            const requiredFields = ['businessName', 'vatNumber', 'businessAddress', 'invoiceNumber', 'invoiceDate', 'customerName', 'customerAddress'];
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        // Validate form
+        function validateForm() {
+            const requiredFields = [
+                'businessName',
+                'vatNumber',
+                'businessAddress',
+                'invoiceNumber',
+                'invoiceDate',
+                'customerName',
+                'customerAddress'
+            ];
+            
             let isValid = true;
+            let errorMessage = '';
             
             requiredFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (!field.value.trim()) {
                     field.style.borderColor = '#e74c3c';
                     isValid = false;
+                    errorMessage = 'Please fill all required fields (marked with *)';
                 } else {
                     field.style.borderColor = '#ddd';
                 }
             });
             
-            if (!isValid) {
-                alert('Please fill all required fields (marked with *)');
-                return;
+            // Validate VAT number (15 digits)
+            const vatField = document.getElementById('vatNumber');
+            if (vatField.value && !/^\d{15}$/.test(vatField.value)) {
+                vatField.style.borderColor = '#e74c3c';
+                errorMessage = 'VAT Registration Number must be exactly 15 digits';
+                isValid = false;
             }
             
-            // Calculate totals
-            calculateTotals();
+            // Check if at least one item has description
+            const hasItems = document.querySelectorAll('#itemsTableBody tr').length > 0;
+            if (!hasItems) {
+                errorMessage = 'Please add at least one item to the invoice';
+                isValid = false;
+            }
             
-            // Collect data
-            invoiceData.businessName = document.getElementById('businessName').value;
-            invoiceData.vatNumber = document.getElementById('vatNumber').value;
-            invoiceData.businessAddress = document.getElementById('businessAddress').value;
-            invoiceData.invoiceNumber = document.getElementById('invoiceNumber').value;
-            invoiceData.invoiceDate = document.getElementById('invoiceDate').value;
-            invoiceData.supplyDate = document.getElementById('supplyDate').value;
-            invoiceData.customerName = document.getElementById('customerName').value;
-            invoiceData.customerAddress = document.getElementById('customerAddress').value;
-            invoiceData.customerVat = document.getElementById('customerVat').value;
+            if (!isValid && errorMessage) {
+                alert(errorMessage);
+            }
             
-            // Calculate final totals
-            let subtotal = 0;
-            invoiceData.items.forEach(item => {
-                item.subtotal = item.quantity * item.price;
-                subtotal += item.subtotal;
+            return isValid;
+        }
+
+        // Collect form data
+        function collectFormData() {
+            // Collect items
+            const items = [];
+            const rows = document.querySelectorAll('#itemsTableBody tr');
+            rows.forEach(row => {
+                const description = row.querySelector('.item-description').value;
+                const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                const unit = row.querySelector('.item-unit').value;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const subtotal = quantity * price;
+                
+                if (description || quantity > 0 || price > 0) {
+                    items.push({
+                        description,
+                        quantity,
+                        unit,
+                        price,
+                        subtotal
+                    });
+                }
             });
             
+            // Calculate totals
+            let subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
             const vatRate = 0.15;
             const vatAmount = subtotal * vatRate;
             const total = subtotal + vatAmount;
             
-            // Update printable invoice
-            updatePrintableInvoice();
+            return {
+                logo: currentLogo,
+                businessName: document.getElementById('businessName').value,
+                vatNumber: document.getElementById('vatNumber').value,
+                businessAddress: document.getElementById('businessAddress').value,
+                invoiceNumber: document.getElementById('invoiceNumber').value,
+                invoiceDate: document.getElementById('invoiceDate').value,
+                supplyDate: document.getElementById('supplyDate').value,
+                customerName: document.getElementById('customerName').value,
+                customerAddress: document.getElementById('customerAddress').value,
+                customerVat: document.getElementById('customerVat').value,
+                items,
+                subtotal,
+                vatAmount,
+                total
+            };
+        }
+
+        // Generate invoice
+        function generateInvoice() {
+            console.log('Generate Invoice clicked');
             
-            // Show copy toggle and original copy
+            if (!validateForm()) {
+                console.log('Form validation failed');
+                return;
+            }
+            
+            console.log('Form validation passed');
+            
+            // Collect data
+            invoiceData = collectFormData();
+            console.log('Invoice data collected:', invoiceData);
+            
+            // Show print button
+            document.getElementById('printBtn').style.display = 'inline-block';
+            
+            // Show copy toggle
             document.getElementById('copyToggle').style.display = 'flex';
+            
+            // Generate invoice copies
+            generateInvoiceCopies();
+            
+            // Show original copy by default
             showCopy('original');
             
-            // Scroll to preview
-            document.getElementById('printableOriginal').scrollIntoView({ behavior: 'smooth' });
+            // Scroll to invoices
+            document.getElementById('invoicesContainer').scrollIntoView({ behavior: 'smooth' });
+            
+            alert('Invoice generated successfully! Click "Print Invoice" to print both copies.');
         }
 
-        // Update printable invoice
-        function updatePrintableInvoice() {
-            // Update original copy
-            updateInvoiceCopy('printableOriginal', 'ORIGINAL');
+        // Generate invoice copies
+        function generateInvoiceCopies() {
+            const container = document.getElementById('invoicesContainer');
+            container.innerHTML = '';
+            
+            // Create original copy
+            const originalInvoice = createInvoiceElement(invoiceData, 'ORIGINAL', '#e74c3c');
+            originalInvoice.id = 'originalInvoice';
+            container.appendChild(originalInvoice);
             
             // Create duplicate copy
-            const duplicateContent = document.querySelector('#printableDuplicate .invoice-content');
-            duplicateContent.innerHTML = document.querySelector('#printableOriginal .invoice-content').innerHTML;
+            const duplicateInvoice = createInvoiceElement(invoiceData, 'DUPLICATE', '#3498db');
+            duplicateInvoice.id = 'duplicateInvoice';
+            duplicateInvoice.style.display = 'none';
+            container.appendChild(duplicateInvoice);
             
-            // Update duplicate watermark
-            const duplicateWatermark = document.querySelector('#printableDuplicate .invoice-watermark');
-            duplicateWatermark.textContent = 'DUPLICATE';
-            duplicateWatermark.style.color = 'rgba(0, 0, 255, 0.05)';
-            
-            // Update duplicate stamp
-            const duplicateStamp = duplicateContent.querySelector('.stamp-box');
-            if (duplicateStamp) {
-                duplicateStamp.textContent = 'DUPLICATE COPY';
-            }
+            console.log('Invoice copies generated');
         }
 
-        // Update specific invoice copy
-        function updateInvoiceCopy(containerId, copyType) {
-            const container = document.getElementById(containerId);
+        // Create invoice element
+        function createInvoiceElement(data, copyType, stampColor) {
+            const invoiceDiv = document.createElement('div');
+            invoiceDiv.className = 'printable-invoice';
             
-            // Update logo
-            const logoImg = container.querySelector('#printLogo');
-            if (invoiceData.logo) {
-                logoImg.src = invoiceData.logo;
-                logoImg.style.display = 'block';
-            }
-            
-            // Update business info
-            container.querySelector('#printBusinessName').textContent = invoiceData.businessName;
-            container.querySelector('#printBusinessAddress').textContent = invoiceData.businessAddress;
-            container.querySelector('#printVatNumber').textContent = invoiceData.vatNumber;
-            container.querySelector('#printCompanyName').textContent = invoiceData.businessName;
-            
-            // Update invoice info
-            container.querySelector('#printInvoiceNumber').textContent = invoiceData.invoiceNumber;
-            container.querySelector('#printInvoiceDate').textContent = formatDate(invoiceData.invoiceDate);
-            container.querySelector('#printSupplyDate').textContent = invoiceData.supplyDate ? formatDate(invoiceData.supplyDate) : 'Same as invoice date';
-            
-            // Update customer info
-            container.querySelector('#printCustomerName').textContent = invoiceData.customerName;
-            container.querySelector('#printCustomerAddress').textContent = invoiceData.customerAddress;
-            container.querySelector('#printCustomerVat').textContent = invoiceData.customerVat || 'Not registered';
-            
-            // Calculate totals
-            let subtotal = 0;
-            invoiceData.items.forEach(item => {
-                item.subtotal = item.quantity * item.price;
-                subtotal += item.subtotal;
+            // Generate items HTML
+            let itemsHTML = '';
+            data.items.forEach((item, index) => {
+                itemsHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.description || '-'}</td>
+                        <td>${item.quantity.toFixed(2)}</td>
+                        <td>${item.unit}</td>
+                        <td class="text-right">${item.price.toFixed(2)}</td>
+                        <td class="text-right">${item.subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
             });
             
-            const vatRate = 0.15;
-            const vatAmount = subtotal * vatRate;
-            const total = subtotal + vatAmount
+            // Create invoice HTML
+            invoiceDiv.innerHTML = `
+                <div class="invoice-watermark" style="color: ${copyType === 'ORIGINAL' ? 'rgba(231, 76, 60, 0.05)' : 'rgba(52, 152, 219, 0.05)'};">${copyType}</div>
+                <div class="invoice-content">
+                    <div class="invoice-header">
+                        <div class="company-header">
+                            ${data.logo ? `<img src="${data.logo}" class="company-logo" alt="Company Logo">` : ''}
+                            <div class="company-name">${data.businessName}</div>
+                            <div style="color: #7f8c8d; margin-bottom: 10px; white-space: pre-line;">${data.businessAddress}</div>
+                            <div><strong>VAT Registration:</strong> ${data.vatNumber}</div>
+                        </div>
+                        <div class="invoice-title">
+                            <h1>${data.businessName}</h1>
+                            <h2>TAX INVOICE</h2>
+                            <div class="invoice-info">
+                                <div class="info-row">
+                                    <span class="info-label">Invoice No:</span>
+                                    ${data.invoiceNumber}
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Invoice Date:</span>
+                                    ${formatDate(data.invoiceDate)}
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Supply Date:</span>
+                                    ${data.supplyDate ? formatDate(data.supplyDate) : 'Same as invoice date'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="invoice-details">
+                        <div class="detail-box">
+                            <h3>BILL TO</h3>
+                            <div><strong>${data.customerName}</strong></div>
+                            <div style="margin: 10px 0; white-space: pre-line;">${data.customerAddress}</div>
+                            <div><strong>Customer VAT:</strong> ${data.customerVat || 'Not registered'}</div>
+                        </div>
+                        <div class="detail-box">
+                            <h3>PAYMENT SUMMARY</h3>
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span class="currency">${data.subtotal.toFixed(2)} SAR</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>VAT (15%):</span>
+                                <span class="currency">${data.vatAmount.toFixed(2)} SAR</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total Due:</span>
+                                <span class="currency">${data.total.toFixed(2)} SAR</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Currency:</span>
+                                <span>Saudi Riyal (SAR)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 30px 0 15px 0; color: #2c3e50;">INVOICE ITEMS</h3>
+                    <table class="print-items-table">
+                        <thead>
